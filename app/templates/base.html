@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bridal & Beyond AI{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        .sidebar {
+            background-color: #1e1e1e;
+            min-height: 100vh;
+            border-right: 1px solid #333;
+        }
+
+        .nav-link {
+            color: #aaa;
+            padding: 0.8rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: #2d2d2d;
+            color: #fff;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .card {
+            background-color: #1e1e1e;
+            border: 1px solid #333;
+        }
+
+        .card-header {
+            border-bottom: 1px solid #333;
+            background-color: #252525;
+        }
+
+        .table {
+            color: #e0e0e0;
+        }
+
+        .table-dark {
+            --bs-table-bg: #1e1e1e;
+        }
+
+        .btn-primary {
+            background-color: var(--theme-color, #aa8c66);
+            border-color: var(--theme-color, #aa8c66);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            filter: brightness(0.8);
+        }
+
+        .theme-text {
+            color: var(--theme-color, #aa8c66) !important;
+        }
+    </style>
+
+    <!-- Dynamic Theme Injection -->
+    {% if active_company %}
+    <style>
+        :root {
+            --theme-color: {
+                    {
+                    active_company.primary_color
+                }
+            }
+
+            ;
+
+            --theme-bg: {
+                    {
+                    '#121212' if active_company.theme_bg=='dark' else '#f8f9fa'
+                }
+            }
+
+            ;
+
+            --sidebar-bg: {
+                    {
+                    '#1e1e1e' if active_company.theme_bg=='dark' else '#ffffff'
+                }
+            }
+
+            ;
+
+            --card-bg: {
+                    {
+                    '#1e1e1e' if active_company.theme_bg=='dark' else '#ffffff'
+                }
+            }
+
+            ;
+
+            --text-color: {
+                    {
+                    '#e0e0e0' if active_company.theme_bg=='dark' else '#212529'
+                }
+            }
+
+            ;
+        }
+
+        body {
+            background-color: var(--theme-bg);
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            background-color: var(--sidebar-bg);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+        }
+
+        .table {
+            color: var(--text-color);
+        }
+    </style>
+    {% endif %}
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            {% if session.get('user_id') %}
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-4">
+
+                    <!-- Dynamic Company Branding -->
+                    <div class="text-center mb-3">
+                        {% if active_company and active_company.logo_url %}
+                        <img src="{{ active_company.logo_url }}" alt="{{ active_company.name }} Logo"
+                            class="img-fluid px-4 mb-2" style="max-height: 80px; object-fit: contain;">
+                        {% else %}
+                        <h5 class="text-center mb-2 theme-text" style="font-weight: 600;">
+                            {{ active_company.name if active_company else 'Bridal & Beyond' }}
+                        </h5>
+                        {% endif %}
+                    </div>
+
+                    <!-- Company Switcher -->
+                    <div class="px-3 mb-4 pb-2 border-bottom" style="border-color: #333 !important;">
+                        <form action="{{ url_for('switch_company', company_id=0) }}" method="POST"
+                            id="companySwitcherForm">
+                            <select class="form-select form-select-sm bg-dark text-light border-secondary"
+                                onchange="this.form.action='/switch_company/' + this.value; this.form.submit();">
+                                {% for comp in all_companies %}
+                                <option value="{{ comp.id }}" {% if active_company and active_company.id==comp.id
+                                    %}selected{% endif %}>
+                                    {{ comp.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                                href="{{ url_for('dashboard') }}">
+                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('appointments') %}active{% endif %}"
+                                href="{{ url_for('appointments.appointment_list') }}">
+                                <i class="bi bi-calendar-event me-2"></i> Appointments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('customers') %}active{% endif %}"
+                                href="{{ url_for('customers.customer_list') }}">
+                                <i class="bi bi-people me-2"></i> Customers
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('orders') %}active{% endif %}"
+                                href="{{ url_for('orders.order_list') }}">
+                                <i class="bi bi-receipt me-2"></i> Orders & Payments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('pickups') %}active{% endif %}"
+                                href="{{ url_for('pickups.pickup_list') }}">
+                                <i class="bi bi-bag-check me-2"></i> Pickups
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('inventory') %}active{% endif %}"
+                                href="{{ url_for('inventory.catalog') }}">
+                                <i class="bi bi-box me-2"></i> Inventory & Products
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6
+                        class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-uppercase">
+                        <span>Vendor & Staff</span>
+                    </h6>
+                    <ul class="nav flex-column mb-2">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('purchasing') %}active{% endif %}"
+                                href="{{ url_for('purchasing.vendor_list') }}">
+                                <i class="bi bi-cart me-2"></i> Purchasing / Portal
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('payroll') %}active{% endif %}"
+                                href="{{ url_for('payroll.payroll_dashboard') }}">
+                                <i class="bi bi-cash me-2"></i> Payroll & Comm.
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}"
+                                href="{{ url_for('reports.overview') }}">
+                                <i class="bi bi-graph-up me-2"></i> Reports & KPIs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="bi bi-gear me-2"></i> Settings
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="mt-auto p-3 position-absolute bottom-0 w-100 border-top mt-5"
+                        style="border-color: #333 !important;">
+                        <div class="d-flex align-items-center">
+                            <div class="ms-2">
+                                <strong class="d-block">{{ session.get('name') }}</strong>
+                                <span class="text-muted small">{{ session.get('role') }}</span>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-secondary ms-auto">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            {% endif %}
+
+            <!-- Main Content Area -->
+            <main
+                class="{% if session.get('user_id') %}col-md-9 ms-sm-auto col-lg-10{% else %}col-12{% endif %} content-area">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show"
+                    role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.css"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

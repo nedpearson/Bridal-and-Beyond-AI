@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Catalog - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Inventory Catalog</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center me-2">
+            <i class="bi bi-cart me-1"></i> Submit Vendor PO
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-light d-flex align-items-center">
+            <i class="bi bi-plus-lg me-1"></i> Add Product
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">All Products</h5>
+        <div class="input-group input-group-sm w-25">
+            <input type="text" class="form-control text-light" placeholder="Search SKU or Name..."
+                style="background-color: #2b2b2b; border-color: #444;">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-dark mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-3 border-0">Product Name</th>
+                        <th class="border-0">SKU</th>
+                        <th class="border-0">Type</th>
+                        <th class="border-0">Designer/Vendor</th>
+                        <th class="border-0">Price</th>
+                        <th class="border-0">Available Qty</th>
+                        <th class="text-end pe-3 border-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td class="ps-3">
+                            <strong>{{ product.name }}</strong>
+                        </td>
+                        <td>{{ product.sku }}</td>
+                        <td><span class="badge bg-secondary">{{ product.type }}</span></td>
+                        <td>{{ product.vendor_name or 'N/A' }}</td>
+                        <td>${{ "{:,.2f}".format(product.price) }}</td>
+                        <td>
+                            {% if product.total_qty and product.total_qty > 0 %}
+                            <span class="text-success">{{ product.total_qty }} In Stock</span>
+                            {% else %}
+                            <span class="text-danger">Out of Stock</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <button class="btn btn-sm btn-outline-light me-1" title="View Details"><i
+                                    class="bi bi-eye"></i></button>
+                            <form action="{{ url_for('inventory.reserve_product', id=product.id) }}" method="POST"
+                                class="d-inline">
+                                <input type="hidden" name="qty" value="1">
+                                <button type="submit" class="btn btn-sm btn-outline-light" title="Reserve Item"><i
+                                        class="bi bi-bookmark-plus"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-box-seam fs-2 d-block mb-2"></i>
+                            No products found in inventory.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

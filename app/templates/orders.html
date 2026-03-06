@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Orders & Payments - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Orders & Payments</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
+            <i class="bi bi-receipt me-1"></i> New Order
+        </button>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Active Orders Metric -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(145deg, #1e1e1e, #181818);">
+            <div class="card-body d-flex align-items-center">
+                <div class="bg-dark p-3 rounded text-center me-3 border border-secondary">
+                    <i class="bi bi-file-earmark-text fs-3 text-light"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1">Active Orders</h6>
+                    <a href="{{ url_for('orders.order_list') }}" class="text-decoration-none" style="color: inherit;">
+                        <h3 class="mb-0" style="color: #aa8c66;">{{ orders|length }}</h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Outstanding Balances Metric -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(145deg, #1e1e1e, #181818);">
+            <div class="card-body d-flex align-items-center">
+                <div class="bg-dark p-3 rounded text-center me-3 border border-secondary">
+                    <i class="bi bi-exclamation-triangle fs-3 text-warning"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1">Total Outstanding</h6>
+                    <a href="{{ url_for('orders.order_list') }}" class="text-decoration-none" style="color: inherit;">
+                        <h3 class="mb-0 text-light">${{ "{:,.2f}".format(orders|sum(attribute='balance_due')) }}</h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Order Directory</h5>
+        <div class="input-group input-group-sm w-25">
+            <input type="text" class="form-control text-light" placeholder="Search PO or Customer..."
+                style="background-color: #2b2b2b; border-color: #444;">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-dark mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-3 border-0">Order ID</th>
+                        <th class="border-0">Customer</th>
+                        <th class="border-0">Status</th>
+                        <th class="border-0">Total</th>
+                        <th class="border-0">Paid to Date</th>
+                        <th class="border-0">Balance Due</th>
+                        <th class="text-end pe-3 border-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td class="ps-3 text-light"><strong>#{{ "{:04d}".format(order.id) }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('customers.customer_detail', id=order.customer_id) }}"
+                                class="text-decoration-none" style="color: #aa8c66;">
+                                {{ order.first_name }} {{ order.last_name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if order.status == 'Fulfilled' %}
+                            <span class="badge bg-secondary">{{ order.status }}</span>
+                            {% elif order.status == 'Draft' %}
+                            <span class="badge bg-secondary text-dark">{{ order.status }}</span>
+                            {% else %}
+                            <span class="badge bg-success">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>${{ "{:,.2f}".format(order.total) }}</td>
+                        <td class="text-success">${{ "{:,.2f}".format(order.total_paid - order.total_refunded) }}</td>
+                        <td>
+                            {% if order.balance_due > 0 %}
+                            <span class="text-warning fw-bold">${{ "{:,.2f}".format(order.balance_due) }}</span>
+                            {% else %}
+                            <span class="text-muted">Paid in Full</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <a href="{{ url_for('orders.order_detail', id=order.id) }}"
+                                class="btn btn-sm btn-outline-light"><i class="bi bi-wallet2 me-1"></i> Ledger</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-receipt fs-2 d-block mb-2"></i>
+                            No orders found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Timesheets - {{ person.first_name }} {{ person.last_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent p-0 m-0 w-100">
+                <li class="breadcrumb-item"><a href="{{ url_for('payroll.payroll_dashboard') }}"
+                        class="text-muted text-decoration-none">Payroll & Comm.</a></li>
+                <li class="breadcrumb-item active text-light" aria-current="page">{{ person.first_name }} Timesheets
+                </li>
+            </ol>
+        </nav>
+        <h1 class="h2 mt-2 mb-0">{{ person.first_name }} {{ person.last_name }}</h1>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <form action="{{ url_for('payroll.approve_timesheets', user_id=person.id) }}" method="POST">
+            <button type="submit" class="btn btn-sm btn-primary d-flex align-items-center" {% if unapproved_count==0
+                %}disabled{% endif %}>
+                <i class="bi bi-check2-all me-1"></i> Approve All Pending
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 bg-dark">
+            <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-light"><i class="bi bi-clock-history me-2" style="color: #aa8c66;"></i> Logged Time
+                    Entries</h5>
+                <span class="badge bg-danger">{{ unapproved_count }} Unapproved</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-3 border-0">Date</th>
+                                <th class="border-0">Clock In</th>
+                                <th class="border-0">Clock Out</th>
+                                <th class="border-0 text-end">Total Hours</th>
+                                <th class="border-0 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in timesheets %}
+                            <tr>
+                                <td class="ps-3">{{ entry.clock_in.split(' ')[0] }}</td>
+                                <td>{{ entry.clock_in.split(' ')[1][:5] }}</td>
+                                <td>{{ entry.clock_out.split(' ')[1][:5] if entry.clock_out else '--:--' }}</td>
+                                <td class="text-end fw-bold">{{ entry.total_hours or '--' }}</td>
+                                <td class="text-center">
+                                    {% if entry.approved %}
+                                    <i class="bi bi-check-circle-fill text-success" title="Approved"></i>
+                                    {% else %}
+                                    <i class="bi bi-exclamation-circle-fill text-warning" title="Pending Approval"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No time entries recorded for this
+                                    user.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

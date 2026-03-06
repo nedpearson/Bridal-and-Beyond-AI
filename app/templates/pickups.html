@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Pickups - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Customer Pickups</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
+            <i class="bi bi-calendar-check me-1"></i> Schedule Pickup
+        </button>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Active Pickups Metric -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(145deg, #1e1e1e, #181818);">
+            <div class="card-body d-flex align-items-center">
+                <div class="bg-dark p-3 rounded text-center me-3 border border-secondary">
+                    <i class="bi bi-bag-check fs-3 text-light"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1">Pickups Today</h6>
+                    <a href="{{ url_for('pickups.pickup_list') }}" class="text-decoration-none" style="color: inherit;">
+                        <h3 class="mb-0 text-success">{{ today_count }}</h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100" style="background: linear-gradient(145deg, #1e1e1e, #181818);">
+            <div class="card-body d-flex align-items-center">
+                <div class="bg-dark p-3 rounded text-center me-3 border border-secondary">
+                    <i class="bi bi-exclamation-square fs-3 text-warning"></i>
+                </div>
+                <div>
+                    <h6 class="text-muted mb-1">Pending Pickups</h6>
+                    <a href="{{ url_for('pickups.pickup_list') }}" class="text-decoration-none" style="color: inherit;">
+                        <h3 class="mb-0 text-light">{{ pending_count }}</h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 bg-dark">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-light">Pickup Schedule</h5>
+        <div class="input-group input-group-sm w-25">
+            <input type="date" class="form-control bg-dark text-light border-secondary">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-3 border-0">Date & Time</th>
+                        <th class="border-0">Customer</th>
+                        <th class="border-0">Order Ref</th>
+                        <th class="border-0">Status</th>
+                        <th class="border-0 text-end pe-3">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pickup in pickups %}
+                    <tr>
+                        <td class="ps-3">{{ pickup.scheduled_at }}</td>
+                        <td>
+                            <strong>{{ pickup.first_name }} {{ pickup.last_name }}</strong>
+                        </td>
+                        <td><a href="{{ url_for('orders.order_detail', id=pickup.order_id) }}"
+                                class="text-light text-decoration-none">#{{ "{:04d}".format(pickup.order_id) }}</a></td>
+                        <td>
+                            {% if pickup.status == 'Completed' %}
+                            <span class="badge bg-secondary">{{ pickup.status }}</span>
+                            {% elif pickup.status == 'Scheduled' %}
+                            <span class="badge bg-warning text-dark">{{ pickup.status }}</span>
+                            {% else %}
+                            <span class="badge bg-info text-dark">{{ pickup.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <form action="{{ url_for('pickups.complete_pickup', id=pickup.id) }}" method="POST"
+                                class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success" {% if
+                                    pickup.status=='Completed' %}disabled{% endif %}>
+                                    <i class="bi bi-check2-square"></i> Mark Complete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-calendar-x fs-3 d-block mb-2"></i>
+                            No pickups scheduled.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

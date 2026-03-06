@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary">Filter</button>
+        </div>
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
+            <i class="bi bi-plus-lg me-1"></i> New Appointment
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Appointments Today</h6>
+                <a href="{{ url_for('appointments.appointment_list') }}" class="text-decoration-none"
+                    style="color: inherit;">
+                    <h2 class="card-title mb-0 theme-text">{{ today_appts }}</h2>
+                </a>
+                <small class="text-success"><i class="bi bi-arrow-up-short"></i> Scheduled for today</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Pickups Due</h6>
+                <a href="{{ url_for('pickups.pickup_list') }}" class="text-decoration-none" style="color: inherit;">
+                    <h2 class="card-title mb-0 theme-text">{{ pickups_due }}</h2>
+                </a>
+                <small class="text-warning"><i class="bi bi-exclamation-circle"></i> Pending pickups</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Outstanding Balances</h6>
+                <a href="{{ url_for('orders.order_list') }}" class="text-decoration-none" style="color: inherit;">
+                    <h2 class="card-title mb-0 theme-text">${{ "%.2f"|format(outstanding) }}</h2>
+                </a>
+                <small class="text-muted">Current A/R</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Awaiting Receiving</h6>
+                <a href="{{ url_for('purchasing.vendor_list') }}" class="text-decoration-none" style="color: inherit;">
+                    <h2 class="card-title mb-0 theme-text">{{ po_count }}</h2>
+                </a>
+                <small class="text-muted">Open Vendor Orders</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Today's Schedule -->
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Today's Schedule</h5>
+                <a href="{{ url_for('appointments.appointment_list') }}" class="btn btn-sm btn-outline-secondary">View
+                    Complete</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-3 border-0">Time</th>
+                                <th class="border-0">Customer</th>
+                                <th class="border-0">Service</th>
+                                <th class="border-0">Stylist</th>
+                                <th class="border-0">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if schedule %}
+                            {% for item in schedule %}
+                            <tr>
+                                <td class="ps-3">{{ item.start_at.split(' ')[1][:5] if item.start_at else '' }}</td>
+                                <td><strong>{{ item.customer_name }}</strong><br><small class="text-muted">Wedding: {{
+                                        item.wedding_date.split(' ')[0] if item.wedding_date else 'N/A' }}</small></td>
+                                <td>{{ item.service_name }}</td>
+                                <td>{{ item.stylist_name if item.stylist_name else 'Unassigned' }}</td>
+                                <td>
+                                    {% if item.status == 'Scheduled' %}
+                                    <span class="badge bg-warning text-dark">Scheduled</span>
+                                    {% elif item.status == 'Checked In' %}
+                                    <span class="badge bg-info text-dark">Checked In</span>
+                                    {% elif item.status == 'Completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ item.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">No appointments scheduled for today.
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <button class="btn btn-outline-light text-start p-3 d-flex align-items-center border-secondary">
+                        <i class="bi bi-cash-coin fs-4 me-3 text-success"></i>
+                        <div>
+                            <strong>Take Payment / Deposit</strong>
+                            <div class="small text-muted">Process a new ledger entry</div>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-light text-start p-3 d-flex align-items-center border-secondary">
+                        <i class="bi bi-box-seam fs-4 me-3 text-info"></i>
+                        <div>
+                            <strong>Receive Inventory</strong>
+                            <div class="small text-muted">Log items from vendor P.O.</div>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-light text-start p-3 d-flex align-items-center border-secondary">
+                        <i class="bi bi-clock-history fs-4 me-3 text-warning"></i>
+                        <div>
+                            <strong>Staff Timeclock</strong>
+                            <div class="small text-muted">Clock in/out or view hours</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

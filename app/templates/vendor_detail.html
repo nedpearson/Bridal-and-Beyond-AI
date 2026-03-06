@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ vendor.name }} - Vendor Profile{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent p-0 m-0 w-100">
+                <li class="breadcrumb-item"><a href="{{ url_for('purchasing.vendor_list') }}"
+                        class="text-muted text-decoration-none">Vendors & Purchasing</a></li>
+                <li class="breadcrumb-item active text-light" aria-current="page">{{ vendor.name }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mt-2 mb-0">{{ vendor.name }}</h1>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-outline-light me-2">
+            <i class="bi bi-pencil me-1"></i> Edit Details
+        </button>
+        <button class="btn btn-sm btn-primary">
+            <i class="bi bi-file-earmark-plus me-1"></i> New PO
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Vendor Contact Card -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header bg-dark border-bottom">
+                <h5 class="mb-0 text-light"><i class="bi bi-building me-2 text-primary"
+                        style="color: #aa8c66 !important;"></i> Vendor Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted fw-normal">Contact</dt>
+                    <dd class="col-sm-8 text-light">{{ vendor.contact_name or '--' }}</dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Email</dt>
+                    <dd class="col-sm-8 mt-2"><a href="mailto:{{ vendor.email }}" class="text-light">{{ vendor.email or
+                            '--' }}</a></dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Phone</dt>
+                    <dd class="col-sm-8 mt-2">{{ vendor.phone or '--' }}</dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Portal</dt>
+                    <dd class="col-sm-8 mt-2">
+                        {% if vendor.portal_url %}
+                        <a href="{{ vendor.portal_url }}" target="_blank" class="text-primary text-decoration-none"
+                            style="color: #aa8c66 !important;"><i class="bi bi-box-arrow-up-right me-1"></i> Login</a>
+                        {% else %}
+                        <span class="text-muted fst-italic">Not Configured</span>
+                        {% endif %}
+                    </dd>
+                </dl>
+
+                <hr class="border-secondary mt-4 mb-3">
+                <h6 class="text-muted mb-2">Internal Notes</h6>
+                <div class="bg-dark p-3 rounded" style="font-size: 0.9rem; border: 1px solid #333;">
+                    {{ vendor.notes or 'No specific rep notes.' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PO History Table -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Purchase History</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-4 border-0">PO #</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0">Expected By</th>
+                                <th class="border-0">Amount</th>
+                                <th class="border-0 text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in pos %}
+                            <tr>
+                                <td class="ps-4 text-light">#{{ "{:04d}".format(po.id) }}</td>
+                                <td class="text-light">{{ po.order_date.split(' ')[0] }}</td>
+                                <td>
+                                    {% if po.status == 'Received' %}
+                                    <span class="badge bg-success">{{ po.status }}</span>
+                                    {% elif po.status == 'Draft' %}
+                                    <span class="badge bg-secondary text-dark">{{ po.status }}</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">{{ po.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ po.expected_delivery.split(' ')[0] if po.expected_delivery else 'TBD' }}</td>
+                                <td class="text-light">${{ "{:,.2f}".format(po.total_cost) }}</td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-light">Receive</button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No purchase orders found for this
+                                    vendor.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

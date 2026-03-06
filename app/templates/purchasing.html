@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Purchasing & Vendor Portal - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Purchasing & Vendor Portal</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-outline-light me-2">
+            <i class="bi bi-person-plus me-1"></i> Add Vendor
+        </button>
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
+            <i class="bi bi-file-earmark-plus me-1"></i> New Purchase Order
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Active Purchase Orders -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Purchase Orders</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-3 border-0">PO #</th>
+                                <th class="border-0">Vendor</th>
+                                <th class="border-0">Order Date</th>
+                                <th class="border-0">Expected</th>
+                                <th class="border-0">Status</th>
+                                <th class="border-0 text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in pos %}
+                            <tr>
+                                <td class="ps-3 text-light">#{{ "{:04d}".format(po.id) }}</td>
+                                <td>{{ po.vendor_name }}</td>
+                                <td>{{ po.order_date.split(' ')[0] }}</td>
+                                <td>{{ po.expected_delivery.split(' ')[0] if po.expected_delivery else 'TBD' }}</td>
+                                <td>
+                                    {% if po.status == 'Received' %}
+                                    <span class="badge bg-success">{{ po.status }}</span>
+                                    {% elif po.status == 'Submitted' %}
+                                    <span class="badge bg-info text-dark">{{ po.status }}</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">{{ po.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-light">Details</button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-receipt fs-3 d-block mb-2"></i>
+                                    No purchase orders generated.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Directory -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0">Designers & Vendors</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush rounded-bottom border-0">
+                    {% for vendor in vendors %}
+                    <a href="{{ url_for('purchasing.vendor_detail', id=vendor.id) }}"
+                        class="list-group-item list-group-item-action bg-dark border-secondary text-light p-3">
+                        <div class="d-flex w-100 justify-content-between mb-1">
+                            <h6 class="mb-0" style="color: #aa8c66;">{{ vendor.name }}</h6>
+                            <small class="text-muted">{{ vendor.open_orders or 0 }} Open POs</small>
+                        </div>
+                        <p class="mb-1 small">{{ vendor.contact_name or 'No Contact Rep' }}</p>
+                        <small class="text-muted"><i class="bi bi-envelope"></i> {{ vendor.email or '--' }}</small>
+                    </a>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">No vendors configured.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

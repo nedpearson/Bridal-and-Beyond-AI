@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Customer Management</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
+            <i class="bi bi-person-plus me-1"></i> New Customer
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Customer Directory</h5>
+        <div class="input-group input-group-sm w-25">
+            <input type="text" class="form-control text-light" placeholder="Search by name, email, or phone..."
+                style="background-color: #2b2b2b; border-color: #444;">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-dark mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th class="ps-3 border-0">Name</th>
+                        <th class="border-0">Email</th>
+                        <th class="border-0">Phone</th>
+                        <th class="border-0">Wedding Date</th>
+                        <th class="border-0">Appts</th>
+                        <th class="border-0">Total Spent</th>
+                        <th class="text-end pe-3 border-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td class="ps-3">
+                            <a href="{{ url_for('customers.customer_detail', id=customer.id) }}"
+                                class="text-decoration-none" style="color: #aa8c66;">
+                                <strong>{{ customer.first_name }} {{ customer.last_name }}</strong>
+                            </a>
+                        </td>
+                        <td>{{ customer.email or '--' }}</td>
+                        <td>{{ customer.phone or '--' }}</td>
+                        <td>
+                            {% if customer.wedding_date %}
+                            {{ customer.wedding_date.split(' ')[0] }}
+                            {% else %}
+                            <span class="text-muted">Not Set</span>
+                            {% endif %}
+                        </td>
+                        <td><a href="{{ url_for('customers.customer_detail', id=customer.id) }}#appointments"
+                                class="text-decoration-none"><span class="badge bg-secondary">{{ customer.appt_count
+                                    }}</span></a></td>
+                        <td>
+                            <a href="{{ url_for('customers.customer_detail', id=customer.id) }}#orders"
+                                class="text-decoration-none fw-bold" style="color: #aa8c66;">
+                                ${{ "{:,.2f}".format(customer.total_spent) }}
+                            </a>
+                            $0.00
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-3">
+                            <a href="{{ url_for('customers.customer_detail', id=customer.id) }}"
+                                class="btn btn-sm btn-outline-light"><i class="bi bi-person-lines-fill"></i> View
+                                Profile</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            <i class="bi bi-people fs-2 d-block mb-2"></i>
+                            No customers found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Payroll & Commissions - Bridal & Beyond AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <h1 class="h2">Staff Payroll & Commissions</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-outline-light me-2">
+            <i class="bi bi-clock-history me-1"></i> Review Timesheets
+        </button>
+        <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
+            <i class="bi bi-cash-stack me-1"></i> Run Payroll
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Active Staff Summary -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Staff Member Balances</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-3 border-0">Name</th>
+                                <th class="border-0">Role</th>
+                                <th class="border-0">Pending Comm.</th>
+                                <th class="border-0">Timesheets Appr.</th>
+                                <th class="border-0 text-end pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for person in staff %}
+                            <tr>
+                                <td class="ps-3 text-light"><strong>{{ person.first_name }} {{ person.last_name
+                                        }}</strong></td>
+                                <td>{{ person.role }}</td>
+                                <td>
+                                    {% if person.pending_commissions > 0 %}
+                                    <a href="{{ url_for('payroll.view_timesheets', user_id=person.id) }}"
+                                        class="text-decoration-none" style="color: inherit;">
+                                        <span class="text-success fw-bold">${{
+                                            "{:,.2f}".format(person.pending_commissions) }}</span>
+                                    </a>
+                                    {% else %}
+                                    $0.00
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if person.unapproved_timesheets > 0 %}
+                                    <a href="{{ url_for('payroll.view_timesheets', user_id=person.id) }}"
+                                        class="text-decoration-none" style="color: inherit;">
+                                        <span class="badge bg-danger">{{ person.unapproved_timesheets }}
+                                            Unapproved</span>
+                                    </a>
+                                    {% else %}
+                                    <span class="badge bg-secondary">All Approved</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a href="{{ url_for('payroll.view_timesheets', user_id=person.id) }}"
+                                        class="btn btn-sm btn-outline-light">Ledger</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">No active staff members.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Commission Entries -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0">Recent Commissions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush rounded-bottom border-0">
+                    {% for comm in commissions %}
+                    <div class="list-group-item bg-dark border-secondary text-light p-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0">{{ comm.first_name }} {{ comm.last_name }}</h6>
+                            <a href="{{ url_for('orders.order_detail', id=comm.order_ref) }}"
+                                class="text-decoration-none" style="color: inherit;">
+                                <span class="fw-bold text-success">+${{ "{:,.2f}".format(comm.amount) }}</span>
+                            </a>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Order #{{ "{:04d}".format(comm.order_ref) }}</small>
+                            <small class="text-muted">{{ comm.earned_at.split(' ')[0] }}</small>
+                        </div>
+                        {% if comm.status == 'Pending' %}
+                        <span class="badge bg-warning text-dark mt-2">Pending</span>
+                        {% else %}
+                        <span class="badge bg-secondary mt-2">{{ comm.status }}</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">No recent commissions found.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

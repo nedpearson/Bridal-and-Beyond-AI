@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Profile - {{ customer.first_name }} {{ customer.last_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
+    style="border-color: #333 !important;">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent p-0 m-0 w-100">
+                <li class="breadcrumb-item"><a href="{{ url_for('customers.customer_list') }}"
+                        class="text-muted text-decoration-none">Customers</a></li>
+                <li class="breadcrumb-item active text-light" aria-current="page">{{ customer.first_name }} {{
+                    customer.last_name }}</li>
+            </ol>
+        </nav>
+        <h1 class="h2 mt-2 mb-0">{{ customer.first_name }} {{ customer.last_name }}</h1>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <button type="button" class="btn btn-sm btn-outline-light me-2">
+            <i class="bi bi-pencil me-1"></i> Edit
+        </button>
+        <button class="btn btn-sm btn-primary">
+            <i class="bi bi-calendar-plus me-1"></i> Book Appointment
+        </button>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Customer Info Sidebar -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header bg-dark border-bottom">
+                <h5 class="mb-0 text-light"><i class="bi bi-person-badge-fill me-2 text-primary"
+                        style="color: #aa8c66 !important;"></i> Profile Details</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted fw-normal">Email</dt>
+                    <dd class="col-sm-8"><a href="mailto:{{ customer.email }}" class="text-light">{{ customer.email or
+                            '--' }}</a></dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Phone</dt>
+                    <dd class="col-sm-8 mt-2">{{ customer.phone or '--' }}</dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Address</dt>
+                    <dd class="col-sm-8 mt-2">{{ customer.address or '--' }}</dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Wedding Date</dt>
+                    <dd class="col-sm-8 mt-2 fw-semibold" style="color: #aa8c66;">
+                        {% if customer.wedding_date %}
+                        {{ customer.wedding_date.split(' ')[0] }}
+                        {% else %}
+                        <span class="text-muted fst-italic">Not Set</span>
+                        {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-4 text-muted fw-normal mt-2">Partner</dt>
+                    <dd class="col-sm-8 mt-2">{{ customer.partner_name or '--' }}</dd>
+                </dl>
+
+                <hr class="border-secondary mt-4 mb-3">
+                <h6 class="text-muted mb-2">Internal Notes</h6>
+                <div class="bg-dark p-3 rounded" style="font-size: 0.9rem; border: 1px solid #333;">
+                    {{ customer.notes or 'No notes provided.' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Information Grid (Tabs) -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark p-0 border-bottom">
+                <ul class="nav nav-tabs border-0" id="customerTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active px-4 py-3 border-0 bg-transparent text-light fw-semibold"
+                            id="appointments-tab" data-bs-toggle="tab" data-bs-target="#appointments" type="button"
+                            role="tab">Appointments</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link px-4 py-3 border-0 bg-transparent text-muted text-hover-light"
+                            id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button"
+                            role="tab">Orders & Payments</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body p-0">
+                <div class="tab-content" id="customerTabsContent">
+                    <!-- Appointments Tab -->
+                    <div class="tab-pane fade show active" id="appointments" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-dark mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4 border-0">Date & Time</th>
+                                        <th class="border-0">Service</th>
+                                        <th class="border-0">Status</th>
+                                        <th class="border-0 text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appt in appointments %}
+                                    <tr>
+                                        <td class="ps-4 text-light">{{ appt.start_at }}</td>
+                                        <td class="text-light">Service #{{ appt.service_id }}</td>
+                                        <td>
+                                            {% if appt.status == 'Completed' %}
+                                            <span class="badge bg-secondary">{{ appt.status }}</span>
+                                            {% else %}
+                                            <span class="badge bg-warning text-dark">{{ appt.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-sm btn-outline-light">Details</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">No appointments found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Orders Tab -->
+                    <div class="tab-pane fade" id="orders" role="tabpanel">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-dark mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4 border-0">Order ID</th>
+                                        <th class="border-0">Date</th>
+                                        <th class="border-0">Status</th>
+                                        <th class="border-0">Total</th>
+                                        <th class="border-0 text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in orders %}
+                                    <tr>
+                                        <td class="ps-4 text-light">#{{ "{:04d}".format(order.id) }}</td>
+                                        <td class="text-light">{{ order.created_at.split(' ')[0] }}</td>
+                                        <td><span class="badge bg-info text-dark">{{ order.status }}</span></td>
+                                        <td class="text-light">${{ "{:,.2f}".format(order.total) }}</td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-sm btn-outline-light">View Order</button>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">No orders found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nav-tabs .nav-link.active {
+        color: #aa8c66 !important;
+        border-bottom: 3px solid #aa8c66 !important;
+    }
+
+    .text-hover-light:hover {
+        color: #f8f9fa !important;
+    }
+</style>
+{% endblock %}
