@@ -56,8 +56,9 @@
                             {% endif %}
                         </td>
                         <td class="text-end pe-3">
-                            <button class="btn btn-sm btn-outline-light me-1" title="View Details"><i
-                                    class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-light me-1 global-drilldown" title="View Details"
+                                data-drilldown-url="/api/drilldown/product/{{ product.id }}"
+                                data-title="Product Variants"><i class="bi bi-eye"></i></button>
                             <form action="{{ url_for('inventory.reserve_product', id=product.id) }}" method="POST"
                                 class="d-inline">
                                 <input type="hidden" name="qty" value="1">

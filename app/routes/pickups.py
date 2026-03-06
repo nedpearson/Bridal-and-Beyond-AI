@@ -11,6 +11,7 @@ def pickup_list():
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     
     # Get all pickups with order and customer info
     cursor.execute('''
@@ -18,9 +19,9 @@ def pickup_list():
         FROM pickups p
         JOIN orders o ON p.order_id = o.id
         JOIN customers c ON p.customer_id = c.id
-        WHERE p.company_id = ?
+        WHERE p.company_id = ? AND (p.location_id = ? OR ? = 0)
         ORDER BY p.scheduled_at ASC
-    ''', (company_id,))
+    ''', (company_id, location_id, location_id))
     pickups = cursor.fetchall()
     
     # Calculate simple metrics

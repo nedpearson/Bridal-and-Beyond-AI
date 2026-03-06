@@ -10,6 +10,7 @@ def payroll_dashboard():
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     
     # Get active staff members and their pending commissions
     cursor.execute('''
@@ -18,10 +19,10 @@ def payroll_dashboard():
             (SELECT COUNT(*) FROM time_entries WHERE user_id = u.id AND approved = 0) as unapproved_timesheets
         FROM users u
         LEFT JOIN commissions c ON u.id = c.user_id AND c.status = 'Pending'
-        WHERE u.active = 1 AND u.company_id = ?
+        WHERE u.active = 1 AND u.company_id = ? AND (u.location_id = ? OR ? = 0)
         GROUP BY u.id
         ORDER BY u.first_name ASC
-    ''', (company_id,))
+    ''', (company_id, location_id, location_id))
     staff = cursor.fetchall()
     
     # Get recent commissions
@@ -30,10 +31,10 @@ def payroll_dashboard():
         FROM commissions c
         JOIN users u ON c.user_id = u.id
         JOIN orders o ON c.order_id = o.id
-        WHERE u.company_id = ?
+        WHERE u.company_id = ? AND (u.location_id = ? OR ? = 0)
         ORDER BY c.earned_at DESC
         LIMIT 15
-    ''', (company_id,))
+    ''', (company_id, location_id, location_id))
     commissions = cursor.fetchall()
     
     return render_template('payroll.html', staff=staff, commissions=commissions)

@@ -40,7 +40,8 @@
             <div class="card-body">
                 <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Active Orders
                 </h6>
-                <h3 class="mb-0 drilldown-value" data-metric="active_orders" data-title="Active Orders Detail">
+                <h3 class="mb-0 global-drilldown" data-drilldown-url="/reports/api/drilldown/active_orders"
+                    data-title="Active Orders Detail">
                     {{ active_orders }}
                 </h3>
                 <small class="text-muted mt-2 d-block">Click to drill down into order statuses.</small>
@@ -54,8 +55,9 @@
             <div class="card-body">
                 <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Revenue
                     Collected</h6>
-                <h3 class="mb-0 drilldown-value text-success" data-metric="collected_revenue"
-                    data-title="Revenue Ledger Drilldown" style="color: #4caf50 !important;">
+                <h3 class="mb-0 global-drilldown text-success"
+                    data-drilldown-url="/reports/api/drilldown/collected_revenue" data-title="Revenue Ledger Drilldown"
+                    style="color: #4caf50 !important;">
                     ${{ "{:,.2f}".format(total_collected) }}
                 </h3>
                 <small class="text-muted mt-2 d-block">Total deposits, installments, and finals.</small>
@@ -69,7 +71,8 @@
             <div class="card-body">
                 <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Accounts
                     Receivable</h6>
-                <h3 class="mb-0 drilldown-value text-warning" data-metric="accounts_receivable"
+                <h3 class="mb-0 global-drilldown text-warning"
+                    data-drilldown-url="/reports/api/drilldown/accounts_receivable"
                     data-title="Outstanding Balances Drilldown" style="color: #ff9800 !important;">
                     ${{ "{:,.2f}".format(total_ar) }}
                 </h3>
@@ -126,111 +129,4 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    // Global State for the Drilldown Data to allow CSV exporting
-    let currentDrilldownData = null;
-    let currentDrilldownMetric = '';
-
-    document.addEventListener("DOMContentLoaded", function () {
-        const drilldownValues = document.querySelectorAll('.drilldown-value');
-        const drilldownModal = new bootstrap.Modal(document.getElementById('drilldownModal'));
-
-        drilldownValues.forEach(el => {
-            el.addEventListener('click', function () {
-                const metric = this.getAttribute('data-metric');
-                const title = this.getAttribute('data-title');
-
-                // Set UI to loading
-                document.getElementById('drilldownTitle').textContent = title;
-                document.getElementById('drilldownLoader').classList.remove('d-none');
-                document.getElementById('drilldownTableContainer').classList.add('d-none');
-                document.getElementById('drilldownTableHead').innerHTML = '';
-                document.getElementById('drilldownTableBody').innerHTML = '';
-                document.getElementById('drilldownRecordCount').textContent = '';
-
-                // Show modal
-                drilldownModal.show();
-
-                // Fetch data
-                fetch(`/reports/api/drilldown/${metric}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            alert(data.error);
-                            drilldownModal.hide();
-                            return;
-                        }
-
-                        currentDrilldownData = data;
-                        currentDrilldownMetric = metric;
-
-                        // Populate Table Header
-                        const thead = document.getElementById('drilldownTableHead');
-                        const trHead = document.createElement('tr');
-                        data.columns.forEach(col => {
-                            const th = document.createElement('th');
-                            th.className = "border-0 text-muted";
-                            th.textContent = col;
-                            trHead.appendChild(th);
-                        });
-                        thead.appendChild(trHead);
-
-                        // Populate Table Body
-                        const tbody = document.getElementById('drilldownTableBody');
-                        data.data.forEach(row => {
-                            const tr = document.createElement('tr');
-                            data.columns.forEach(col => {
-                                const td = document.createElement('td');
-                                td.textContent = row[col] || '--';
-                                tr.appendChild(td);
-                            });
-                            tbody.appendChild(tr);
-                        });
-
-                        document.getElementById('drilldownRecordCount').textContent = `Showing ${data.total_records} records`;
-
-                        // Swap UI
-                        document.getElementById('drilldownLoader').classList.add('d-none');
-                        document.getElementById('drilldownTableContainer').classList.remove('d-none');
-                    })
-                    .catch(err => {
-                        console.error('Error fetching drilldown data:', err);
-                        alert('Failed to load drilldown data.');
-                    });
-            });
-        });
-    });
-
-    function exportDrilldownCSV() {
-        if (!currentDrilldownData || !currentDrilldownData.data || currentDrilldownData.data.length === 0) {
-            alert("No data available to export.");
-            return;
-        }
-
-        const cols = currentDrilldownData.columns;
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += cols.join(",") + "\r\n";
-
-        currentDrilldownData.data.forEach(row => {
-            const rowArr = cols.map(col => {
-                let cellData = String(row[col] || "");
-                // Escape quotes and wrap in quotes if there's a comma
-                cellData = cellData.replace(/"/g, '""');
-                if (cellData.includes(",") || cellData.includes('"')) {
-                    cellData = `"${cellData}"`;
-                }
-                return cellData;
-            });
-            csvContent += rowArr.join(",") + "\r\n";
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Drilldown_${currentDrilldownMetric}_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-</script>
 {% endblock %}

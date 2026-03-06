@@ -54,7 +54,9 @@
                             {% endif %}
                         </td>
                         <td class="text-end pe-3">
-                            <button class="btn btn-sm btn-outline-light"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-light global-drilldown"
+                                data-drilldown-url="/api/drilldown/appointment/{{ appt.id }}"
+                                data-title="Appointment Details"><i class="bi bi-search"></i> Details</button>
                         </td>
                     </tr>
                     {% else %}

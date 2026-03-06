@@ -1,12 +1,25 @@
 import sqlite3
 import datetime
-from database import DATABASE, init_db
+from app import app
+from database import DATABASE, init_db, get_db
 
 def seed_data():
-    conn = sqlite3.connect(DATABASE)
+    conn = get_db()
     cursor = conn.cursor()
-    
-    print("Clearing and reinitializing database...")
+    print("Dropping existing tables to rebuild schema...")
+    cursor.execute('PRAGMA foreign_keys = OFF;')
+    tables = [
+        "notification_jobs", "reminders", "notification_preferences",
+        "pickup_items", "pickups", "commissions", "time_entries",
+        "payment_ledger", "payment_plans", "order_items", "orders",
+        "reservations", "product_variants", "products", "vendors",
+        "appointment_checklists", "appointment_participants", "appointments", "services", "customers", "users", "locations", "companies"
+    ]
+    for table in tables:
+        cursor.execute(f"DROP TABLE IF EXISTS {table}")
+    cursor.execute('PRAGMA foreign_keys = ON;')
+
+    print("Reinitializing database...")
     init_db()
 
     print("Inserting Companies...")
@@ -24,20 +37,20 @@ def seed_data():
 
     print("Inserting demo Users...")
     cursor.execute('''
-        INSERT OR IGNORE INTO users (id, company_id, email, password_hash, role, first_name, last_name)
+        INSERT OR IGNORE INTO users (id, company_id, location_id, email, password_hash, role, first_name, last_name)
         VALUES 
-        (1, 1, 'demo@bridalops.com', 'pbkdf2:sha256:600000$mockhash', 'Owner', 'Jane', 'Doe'),
-        (2, 1, 'stylist@bridalops.com', 'pbkdf2:sha256:600000$mockhash', 'Stylist', 'Sarah', 'Smith'),
-        (3, 2, 'proper@bridalops.com', 'pbkdf2:sha256:600000$mockhash', 'Owner', 'Proper', 'Admin')
+        (1, 1, 1, 'demo@bridalops.com', 'pbkdf2:sha256:600000$mockhash', 'Owner', 'Jane', 'Doe'),
+        (2, 1, 1, 'stylist@bridalops.com', 'pbkdf2:sha256:600000$mockhash', 'Stylist', 'Sarah', 'Smith'),
+        (3, 2, 3, 'proper@bridalops.com', 'pbkdf2:sha256:600000$mockhash', 'Owner', 'Proper', 'Admin')
     ''')
     
     print("Inserting demo Customers...")
     wedding_date = (datetime.datetime.now() + datetime.timedelta(days=180)).strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute('''
-        INSERT INTO customers (company_id, first_name, last_name, email, phone, wedding_date)
+        INSERT INTO customers (company_id, location_id, first_name, last_name, email, phone, wedding_date)
         VALUES 
-        (1, 'Emily', 'Johnson', 'emily.j@example.com', '555-0101', ?),
-        (2, 'Jessica', 'Williams', 'jess.w@example.com', '555-0102', ?)
+        (1, 1, 'Emily', 'Johnson', 'emily.j@example.com', '555-0101', ?),
+        (2, 3, 'Jessica', 'Williams', 'jess.w@example.com', '555-0102', ?)
     ''', (wedding_date, wedding_date))
     
     print("Inserting demo Services...")
@@ -57,9 +70,9 @@ def seed_data():
     cursor.execute("INSERT INTO product_variants (product_id, size, color, sku_variant, on_hand_qty) VALUES (1, '10', 'Ivory', 'SY-1001-10-IV', 2)")
     
     print("Inserting demo Orders & Payments...")
-    cursor.execute("INSERT INTO orders (id, company_id, customer_id, status, subtotal, total) VALUES (1, 1, 1, 'Active', 1500.00, 1620.00)")
+    cursor.execute("INSERT INTO orders (id, company_id, location_id, customer_id, status, subtotal, total) VALUES (1, 1, 1, 1, 'Active', 1500.00, 1620.00)")
     cursor.execute("INSERT INTO order_items (order_id, product_variant_id, description, unit_price, line_total) VALUES (1, 1, 'Stella York A-Line Gown', 1500.00, 1500.00)")
-    cursor.execute("INSERT INTO orders (id, company_id, customer_id, status, subtotal, total) VALUES (2, 2, 2, 'Active', 2000.00, 2160.00)")
+    cursor.execute("INSERT INTO orders (id, company_id, location_id, customer_id, status, subtotal, total) VALUES (2, 2, 3, 2, 'Active', 2000.00, 2160.00)")
     
     # Ledger
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -76,33 +89,34 @@ def seed_data():
     apt_end_today3 = datetime.datetime.now().replace(hour=16, minute=30).strftime('%Y-%m-%d %H:%M:%S')
     
     cursor.execute('''
-        INSERT INTO appointments (customer_id, service_id, assigned_staff_id, start_at, end_at, status)
+        INSERT INTO appointments (location_id, customer_id, service_id, assigned_staff_id, start_at, end_at, status)
         VALUES 
-        (1, 1, 2, ?, ?, 'Checked In'),
-        (1, 2, 2, ?, ?, 'Scheduled'),
-        (2, 3, 3, ?, ?, 'Scheduled')
+        (1, 1, 1, 2, ?, ?, 'Checked In'),
+        (1, 1, 2, 2, ?, ?, 'Scheduled'),
+        (3, 2, 3, 3, ?, ?, 'Scheduled')
     ''', (apt_start_today1, apt_end_today1, apt_start_today2, apt_end_today2, apt_start_today3, apt_end_today3))
     
     print("Inserting demo Pickups...")
     pickup_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     pickup_date2 = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute('''
-        INSERT INTO pickups (company_id, order_id, customer_id, scheduled_at, status)
+        INSERT INTO pickups (company_id, location_id, order_id, customer_id, scheduled_at, status)
         VALUES 
-        (1, 1, 1, ?, 'Scheduled'),
-        (1, 1, 1, ?, 'Ready')
+        (1, 1, 1, 1, ?, 'Scheduled'),
+        (1, 1, 1, 1, ?, 'Ready')
     ''', (pickup_date, pickup_date2))
     
     print("Inserting demo Payroll...")
     clock_in = (datetime.datetime.now() - datetime.timedelta(days=1)).replace(hour=9, minute=0).strftime('%Y-%m-%d %H:%M:%S')
     clock_out = (datetime.datetime.now() - datetime.timedelta(days=1)).replace(hour=17, minute=0).strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute("INSERT INTO time_entries (user_id, clock_in, clock_out, total_hours) VALUES (2, ?, ?, 8.0)", (clock_in, clock_out))
+    cursor.execute("INSERT INTO time_entries (user_id, location_id, clock_in, clock_out, total_hours) VALUES (2, 1, ?, ?, 8.0)", (clock_in, clock_out))
     
     cursor.execute("INSERT INTO commissions (user_id, order_id, amount) VALUES (2, 1, 150.00)")
     
     conn.commit()
-    conn.close()
+    # conn.close() handled by teardown
     print("Database seeding completed.")
 
 if __name__ == '__main__':
-    seed_data()
+    with app.app_context():
+        seed_data()

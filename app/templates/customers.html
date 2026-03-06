@@ -57,10 +57,12 @@
                                 class="text-decoration-none"><span class="badge bg-secondary">{{ customer.appt_count
                                     }}</span></a></td>
                         <td>
+                            {% if customer.total_spent %}
                             <a href="{{ url_for('customers.customer_detail', id=customer.id) }}#orders"
                                 class="text-decoration-none fw-bold" style="color: #aa8c66;">
                                 ${{ "{:,.2f}".format(customer.total_spent) }}
                             </a>
+                            {% else %}
                             $0.00
                             {% endif %}
                         </td>

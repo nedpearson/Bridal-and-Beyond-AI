@@ -2,6 +2,26 @@
 
 {% block title %}Purchasing & Vendor Portal - Bridal & Beyond AI{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Styling to mimic the DrillDownValue component from Forensic CPA AI */
+    .drilldown-value {
+        color: #aa8c66;
+        cursor: pointer;
+        text-decoration: underline;
+        text-decoration-style: dotted;
+        text-underline-offset: 4px;
+        transition: color 0.2s ease, transform 0.1s ease;
+        display: inline-block;
+    }
+
+    .drilldown-value:hover {
+        color: #d1b48c;
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom"
     style="border-color: #333 !important;">
@@ -13,6 +33,63 @@
         <button type="button" class="btn btn-sm btn-primary d-flex align-items-center">
             <i class="bi bi-file-earmark-plus me-1"></i> New Purchase Order
         </button>
+    </div>
+</div>
+
+<!-- KPI Drilldown Row -->
+<div class="row g-4 mb-4">
+    <!-- Active Vendors Drilldown -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100 drilldown-value" data-metric="active_vendors"
+            data-title="Active Vendors Directory"
+            style="background: linear-gradient(145deg, #1e1e1e, #181818); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#aa8c66';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
+            <div class="card-body">
+                <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Active
+                    Vendors</h6>
+                <h3 class="mb-0 theme-text">
+                    {{ total_active_vendors }}
+                </h3>
+                <small class="text-muted mt-2 d-block">Click to view vendor directory.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Open Purchase Orders Drilldown -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100 drilldown-value" data-metric="open_orders"
+            data-title="Open Purchase Orders"
+            style="background: linear-gradient(145deg, #1e1e1e, #181818); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#aa8c66';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
+            <div class="card-body">
+                <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Awaiting
+                    Receiving</h6>
+                <h3 class="mb-0 theme-text">
+                    {{ total_open_pos }}
+                </h3>
+                <small class="text-info mt-2 d-block"><i class="bi bi-clock-history"></i> Pending deliveries</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expected Cost Drilldown -->
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100 drilldown-value" data-metric="expected_cost"
+            data-title="Expected Cost Detail"
+            style="background: linear-gradient(145deg, #1e1e1e, #181818); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#dc3545';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
+            <div class="card-body">
+                <h6 class="text-muted mb-2 text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Outstanding
+                    Expected Cost</h6>
+                <h3 class="mb-0 text-danger" style="color: #dc3545 !important;">
+                    ${{ "{:,.2f}".format(total_expected_cost) }}
+                </h3>
+                <small class="text-muted mt-2 d-block">Click to view cost breakdown by PO.</small>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -53,7 +130,9 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end pe-3">
-                                    <button class="btn btn-sm btn-outline-light">Details</button>
+                                    <button class="btn btn-sm btn-outline-light global-drilldown"
+                                        data-drilldown-url="/api/drilldown/po/{{ po.id }}"
+                                        data-title="PO Details">Details</button>
                                 </td>
                             </tr>
                             {% else %}
@@ -97,4 +176,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}

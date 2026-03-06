@@ -11,17 +11,18 @@ def overview():
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     
     # Calculate global metrics
-    cursor.execute("SELECT COUNT(*) as cnt FROM orders WHERE status = 'Active' AND company_id = ?", (company_id,))
+    cursor.execute("SELECT COUNT(*) as cnt FROM orders WHERE status = 'Active' AND company_id = ? AND (location_id = ? OR ? = 0)", (company_id, location_id, location_id))
     active_orders = cursor.fetchone()['cnt']
     
     cursor.execute('''
         SELECT SUM(amount) as collected 
         FROM payment_ledger pl
         JOIN orders o ON pl.order_id = o.id
-        WHERE type IN ('Deposit', 'Installment', 'Final') AND o.company_id = ?
-    ''', (company_id,))
+        WHERE type IN ('Deposit', 'Installment', 'Final') AND o.company_id = ? AND (o.location_id = ? OR ? = 0)
+    ''', (company_id, location_id, location_id))
     row = cursor.fetchone()
     total_collected = row['collected'] if row and row['collected'] else 0.0
     
@@ -29,8 +30,8 @@ def overview():
         SELECT SUM(o.total) as total_sales, 
                SUM( (SELECT COALESCE(SUM(amount), 0) FROM payment_ledger WHERE order_id = o.id AND type IN ('Deposit', 'Installment', 'Final')) ) as total_paid
         FROM orders o
-        WHERE o.company_id = ?
-    ''', (company_id,))
+        WHERE o.company_id = ? AND (o.location_id = ? OR ? = 0)
+    ''', (company_id, location_id, location_id))
     order_totals = cursor.fetchone()
     total_sales = order_totals['total_sales'] if order_totals and order_totals['total_sales'] else 0.0
     total_paid = order_totals['total_paid'] if order_totals and order_totals['total_paid'] else 0.0
@@ -52,6 +53,7 @@ def drilldown_api(metric):
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     
     data = []
     columns = []
@@ -63,9 +65,9 @@ def drilldown_api(metric):
             FROM payment_ledger pl
             JOIN customers c ON pl.customer_id = c.id
             JOIN orders o ON pl.order_id = o.id
-            WHERE pl.type IN ('Deposit', 'Installment', 'Final') AND o.company_id = ?
+            WHERE pl.type IN ('Deposit', 'Installment', 'Final') AND o.company_id = ? AND (o.location_id = ? OR ? = 0)
             ORDER BY pl.occurred_at DESC
-        ''', (company_id,))
+        ''', (company_id, location_id, location_id))
         for row in cursor.fetchall():
             data.append({
                 'Date': row['occurred_at'].split(' ')[0],
@@ -84,8 +86,8 @@ def drilldown_api(metric):
                 (SELECT COALESCE(SUM(amount), 0) FROM payment_ledger WHERE order_id = o.id AND type = 'Refund') as refunded
             FROM orders o
             JOIN customers c ON o.customer_id = c.id
-            WHERE o.status != 'Cancelled' AND o.company_id = ?
-        ''', (company_id,))
+            WHERE o.status != 'Cancelled' AND o.company_id = ? AND (o.location_id = ? OR ? = 0)
+        ''', (company_id, location_id, location_id))
         for row in cursor.fetchall():
             balance = row['total'] - (row['paid'] - row['refunded'])
             if balance > 0.01: # Accounting for float precision
@@ -103,9 +105,9 @@ def drilldown_api(metric):
             SELECT o.id, c.first_name, c.last_name, o.created_at, o.status
             FROM orders o
             JOIN customers c ON o.customer_id = c.id
-            WHERE o.status = 'Active' AND o.company_id = ?
+            WHERE o.status = 'Active' AND o.company_id = ? AND (o.location_id = ? OR ? = 0)
             ORDER BY o.created_at DESC
-        ''', (company_id,))
+        ''', (company_id, location_id, location_id))
         for row in cursor.fetchall():
             data.append({
                 'Order ID': f"#{row['id']:04d}",

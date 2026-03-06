@@ -163,7 +163,8 @@
                     </div>
 
                     <!-- Company Switcher -->
-                    <div class="px-3 mb-4 pb-2 border-bottom" style="border-color: #333 !important;">
+                    <div class="px-3 mb-3 pb-2 border-bottom" style="border-color: #333 !important;">
+                        <span class="text-muted small fw-bold text-uppercase d-block mb-1 px-1">Organization</span>
                         <form action="{{ url_for('switch_company', company_id=0) }}" method="POST"
                             id="companySwitcherForm">
                             <select class="form-select form-select-sm bg-dark text-light border-secondary"
@@ -177,6 +178,26 @@
                             </select>
                         </form>
                     </div>
+
+                    <!-- Workspace / Location Switcher -->
+                    {% if locations %}
+                    <div class="px-3 mb-4 pb-2 border-bottom" style="border-color: #333 !important;">
+                        <span class="text-muted small fw-bold text-uppercase d-block mb-1 px-1">Workspace</span>
+                        <form action="{{ url_for('switch_location', location_id=0) }}" method="POST"
+                            id="locationSwitcherForm">
+                            <select class="form-select form-select-sm bg-dark text-light border-secondary"
+                                onchange="this.form.action='/switch_location/' + this.value; this.form.submit();">
+                                <option value="0" {% if not active_location %}selected{% endif %}>All Locations</option>
+                                {% for loc in locations %}
+                                <option value="{{ loc.id }}" {% if active_location and active_location.id==loc.id
+                                    %}selected{% endif %}>
+                                    {{ loc.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    {% endif %}
 
                     <ul class="nav flex-column">
                         <li class="nav-item">
@@ -234,6 +255,12 @@
                                 <i class="bi bi-cash me-2"></i> Payroll & Comm.
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and request.endpoint.startswith('staff') %}active{% endif %}"
+                                href="{{ url_for('staff.staff_list') }}">
+                                <i class="bi bi-person-badge me-2"></i> Staff & Locations
+                            </a>
+                        </li>
                         <li class="nav-item mt-3">
                             <a class="nav-link {% if request.endpoint and request.endpoint.startswith('reports') %}active{% endif %}"
                                 href="{{ url_for('reports.overview') }}">
@@ -285,7 +312,152 @@
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.css"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Universal Drilldown Modal -->
+    {% include "_drilldown_modal.html" %}
+
+    <script>
+        // Universal Drilldown Logic
+        let currentGlobalDrilldownData = null;
+        let currentGlobalDrilldownTitle = '';
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const globalDrilldownTriggers = document.querySelectorAll('.global-drilldown');
+            const globalDrilldownModal = new bootstrap.Modal(document.getElementById('globalDrilldownModal'));
+
+            // Use event delegation on the document body to catch dynamically rendered buttons
+            document.body.addEventListener('click', function (e) {
+                // Find the closest parent with the .global-drilldown class
+                const target = e.target.closest('.global-drilldown');
+
+                if (target) {
+                    const drilldownUrl = target.getAttribute('data-drilldown-url');
+                    const title = target.getAttribute('data-title') || 'Data Drilldown';
+
+                    if (!drilldownUrl) {
+                        console.error('No data-drilldown-url provided for element:', target);
+                        return;
+                    }
+
+                    // Set UI to loading
+                    document.getElementById('globalDrilldownTitle').textContent = title;
+                    document.getElementById('globalDrilldownLoader').classList.remove('d-none');
+                    document.getElementById('globalDrilldownTableContainer').classList.add('d-none');
+                    document.getElementById('globalDrilldownTableHead').innerHTML = '';
+                    document.getElementById('globalDrilldownTableBody').innerHTML = '';
+                    document.getElementById('globalDrilldownRecordCount').textContent = '';
+
+                    // Show modal
+                    globalDrilldownModal.show();
+
+                    // Fetch data
+                    fetch(drilldownUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                alert(data.error);
+                                globalDrilldownModal.hide();
+                                return;
+                            }
+
+                            currentGlobalDrilldownData = data;
+                            currentGlobalDrilldownTitle = title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+                            // Ensure columns exist, fallback if not explicitly provided
+                            const columns = data.columns || (data.data.length > 0 ? Object.keys(data.data[0]) : []);
+
+                            if (columns.length > 0) {
+                                // Populate Table Header
+                                const thead = document.getElementById('globalDrilldownTableHead');
+                                const trHead = document.createElement('tr');
+                                columns.forEach(col => {
+                                    const th = document.createElement('th');
+                                    th.className = "border-0 text-muted";
+                                    th.textContent = col;
+                                    trHead.appendChild(th);
+                                });
+                                thead.appendChild(trHead);
+
+                                // Populate Table Body
+                                const tbody = document.getElementById('globalDrilldownTableBody');
+                                data.data.forEach(row => {
+                                    const tr = document.createElement('tr');
+                                    columns.forEach(col => {
+                                        const td = document.createElement('td');
+                                        // Simple status badge rendering
+                                        let cellVal = row[col];
+                                        if (cellVal === null || cellVal === undefined) cellVal = '--';
+
+                                        if (col.toLowerCase() === 'status') {
+                                            if (cellVal === 'Scheduled' || cellVal === 'Submitted') {
+                                                cellVal = `<span class="badge bg-warning text-dark">${cellVal}</span>`;
+                                            } else if (cellVal === 'Checked In' || cellVal === 'Ready') {
+                                                cellVal = `<span class="badge bg-info text-dark">${cellVal}</span>`;
+                                            } else if (cellVal === 'Completed' || cellVal === 'Received' || cellVal === 'Paid') {
+                                                cellVal = `<span class="badge bg-success text-white">${cellVal}</span>`;
+                                            } else {
+                                                cellVal = `<span class="badge bg-secondary text-white">${cellVal}</span>`;
+                                            }
+                                        }
+                                        td.innerHTML = cellVal;
+                                        tr.appendChild(td);
+                                    });
+                                    tbody.appendChild(tr);
+                                });
+                            }
+
+                            document.getElementById('globalDrilldownRecordCount').textContent = `Showing ${data.total_records || data.data.length || 0} records`;
+
+                            // Swap UI
+                            document.getElementById('globalDrilldownLoader').classList.add('d-none');
+                            document.getElementById('globalDrilldownTableContainer').classList.remove('d-none');
+                        })
+                        .catch(err => {
+                            console.error('Error fetching global drilldown data:', err);
+                            alert('Failed to load drilldown data.');
+                            globalDrilldownModal.hide();
+                        });
+                }
+            });
+        });
+
+        window.exportGlobalDrilldownCSV = function () {
+            if (!currentGlobalDrilldownData || !currentGlobalDrilldownData.data || currentGlobalDrilldownData.data.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            const columns = currentGlobalDrilldownData.columns || Object.keys(currentGlobalDrilldownData.data[0]);
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += columns.join(",") + "\r\n";
+
+            currentGlobalDrilldownData.data.forEach(row => {
+                const rowArr = columns.map(col => {
+                    let cellData = String(row[col] || "");
+                    // Clean HTML tags if any (like from badges)
+                    cellData = cellData.replace(/<[^>]*>?/gm, '');
+
+                    // Escape quotes and wrap in quotes if there's a comma
+                    cellData = cellData.replace(/"/g, '""');
+                    if (cellData.includes(",") || cellData.includes('"') || cellData.includes('\n')) {
+                        cellData = `"${cellData}"`;
+                    }
+                    return cellData;
+                });
+                csvContent += rowArr.join(",") + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Export_${currentGlobalDrilldownTitle}_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 

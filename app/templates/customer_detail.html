@@ -112,7 +112,9 @@
                                             {% endif %}
                                         </td>
                                         <td class="text-end pe-4">
-                                            <button class="btn btn-sm btn-outline-light">Details</button>
+                                            <button class="btn btn-sm btn-outline-light global-drilldown"
+                                                data-drilldown-url="/api/drilldown/appointment/{{ appt.id }}"
+                                                data-title="Appointment Details">Details</button>
                                         </td>
                                     </tr>
                                     {% else %}
@@ -146,7 +148,9 @@
                                         <td><span class="badge bg-info text-dark">{{ order.status }}</span></td>
                                         <td class="text-light">${{ "{:,.2f}".format(order.total) }}</td>
                                         <td class="text-end pe-4">
-                                            <button class="btn btn-sm btn-outline-light">View Order</button>
+                                            <button class="btn btn-sm btn-outline-light global-drilldown"
+                                                data-drilldown-url="/api/drilldown/order/{{ order.id }}"
+                                                data-title="Order Details">View Order</button>
                                         </td>
                                     </tr>
                                     {% else %}

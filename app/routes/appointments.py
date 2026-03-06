@@ -10,15 +10,16 @@ def appointment_list():
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     cursor.execute('''
         SELECT a.*, c.first_name, c.last_name, s.name as service_name, u.first_name as staff_name
         FROM appointments a
         JOIN customers c ON a.customer_id = c.id
         JOIN services s ON a.service_id = s.id
         LEFT JOIN users u ON a.assigned_staff_id = u.id
-        WHERE c.company_id = ?
+        WHERE c.company_id = ? AND (a.location_id = ? OR ? = 0)
         ORDER BY a.start_at ASC
-    ''', (company_id,))
+    ''', (company_id, location_id, location_id))
     appointments = cursor.fetchall()
     
     return render_template('appointments.html', appointments=appointments)

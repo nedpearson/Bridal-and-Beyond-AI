@@ -20,46 +20,53 @@
 <!-- Key Metrics Row -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
-        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+        <div class="card h-100 shadow-sm border-0 global-drilldown"
+            data-drilldown-url="/api/dashboard/drilldown/appointments_today" data-title="Appointments Today"
+            style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#aa8c66';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Appointments Today</h6>
-                <a href="{{ url_for('appointments.appointment_list') }}" class="text-decoration-none"
-                    style="color: inherit;">
-                    <h2 class="card-title mb-0 theme-text">{{ today_appts }}</h2>
-                </a>
+                <h2 class="card-title mb-0 theme-text">{{ today_appts }}</h2>
                 <small class="text-success"><i class="bi bi-arrow-up-short"></i> Scheduled for today</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+        <div class="card h-100 shadow-sm border-0 global-drilldown"
+            data-drilldown-url="/api/dashboard/drilldown/pickups_due" data-title="Pickups Due"
+            style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#aa8c66';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Pickups Due</h6>
-                <a href="{{ url_for('pickups.pickup_list') }}" class="text-decoration-none" style="color: inherit;">
-                    <h2 class="card-title mb-0 theme-text">{{ pickups_due }}</h2>
-                </a>
+                <h2 class="card-title mb-0 theme-text">{{ pickups_due }}</h2>
                 <small class="text-warning"><i class="bi bi-exclamation-circle"></i> Pending pickups</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+        <div class="card h-100 shadow-sm border-0 global-drilldown"
+            data-drilldown-url="/api/dashboard/drilldown/outstanding_balances" data-title="Outstanding Balances"
+            style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#aa8c66';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Outstanding Balances</h6>
-                <a href="{{ url_for('orders.order_list') }}" class="text-decoration-none" style="color: inherit;">
-                    <h2 class="card-title mb-0 theme-text">${{ "%.2f"|format(outstanding) }}</h2>
-                </a>
+                <h2 class="card-title mb-0 theme-text">${{ "%.2f"|format(outstanding) }}</h2>
                 <small class="text-muted">Current A/R</small>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e);">
+        <div class="card h-100 shadow-sm border-0 global-drilldown"
+            data-drilldown-url="/api/dashboard/drilldown/awaiting_receiving" data-title="Awaiting Receiving"
+            style="background: linear-gradient(145deg, #2a2a2a, #1e1e1e); cursor: pointer; transition: transform 0.2s; border: 1px solid transparent;"
+            onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#aa8c66';"
+            onmouseout="this.style.transform='none'; this.style.borderColor='transparent';">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-muted">Awaiting Receiving</h6>
-                <a href="{{ url_for('purchasing.vendor_list') }}" class="text-decoration-none" style="color: inherit;">
-                    <h2 class="card-title mb-0 theme-text">{{ po_count }}</h2>
-                </a>
+                <h2 class="card-title mb-0 theme-text">{{ po_count }}</h2>
                 <small class="text-muted">Open Vendor Orders</small>
             </div>
         </div>
@@ -156,4 +163,5 @@
         </div>
     </div>
 </div>
+
 {% endblock %}

@@ -10,14 +10,15 @@ def customer_list():
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     cursor.execute('''
         SELECT c.*, 
             (SELECT COUNT(*) FROM appointments WHERE customer_id = c.id) as appt_count,
             (SELECT SUM(total) FROM orders WHERE customer_id = c.id) as total_spent
         FROM customers c
-        WHERE c.company_id = ?
+        WHERE c.company_id = ? AND (c.location_id = ? OR ? = 0)
         ORDER BY c.created_at DESC
-    ''', (company_id,))
+    ''', (company_id, location_id, location_id))
     customers = cursor.fetchall()
     
     return render_template('customers.html', customers=customers)

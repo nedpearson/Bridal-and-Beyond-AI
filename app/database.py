@@ -54,6 +54,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             company_id INTEGER,
+            location_id INTEGER,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL DEFAULT 'Viewer', -- Owner, Manager, Stylist, Alterations, Cashier, Viewer
@@ -61,7 +62,8 @@ def init_db():
             last_name TEXT NOT NULL,
             active BOOLEAN DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(company_id) REFERENCES companies(id)
+            FOREIGN KEY(company_id) REFERENCES companies(id),
+            FOREIGN KEY(location_id) REFERENCES locations(id)
         )
     ''')
 
@@ -69,6 +71,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS customers (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             company_id INTEGER,
+            location_id INTEGER,
             first_name TEXT NOT NULL,
             last_name TEXT NOT NULL,
             email TEXT,
@@ -80,6 +83,7 @@ def init_db():
             created_by INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(company_id) REFERENCES companies(id),
+            FOREIGN KEY(location_id) REFERENCES locations(id),
             FOREIGN KEY(created_by) REFERENCES users(id)
         )
     ''')
@@ -103,6 +107,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS appointments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            location_id INTEGER,
             customer_id INTEGER NOT NULL,
             service_id INTEGER NOT NULL,
             assigned_staff_id INTEGER,
@@ -112,6 +117,7 @@ def init_db():
             notes TEXT,
             created_by INTEGER,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(location_id) REFERENCES locations(id),
             FOREIGN KEY(customer_id) REFERENCES customers(id),
             FOREIGN KEY(service_id) REFERENCES services(id),
             FOREIGN KEY(assigned_staff_id) REFERENCES users(id),
@@ -241,6 +247,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             company_id INTEGER,
+            location_id INTEGER,
             customer_id INTEGER NOT NULL,
             status TEXT DEFAULT 'Draft', -- Draft, Active, Fulfilled, Cancelled
             subtotal REAL DEFAULT 0.0,
@@ -250,6 +257,7 @@ def init_db():
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(company_id) REFERENCES companies(id),
+            FOREIGN KEY(location_id) REFERENCES locations(id),
             FOREIGN KEY(customer_id) REFERENCES customers(id)
         )
     ''')
@@ -308,12 +316,14 @@ def init_db():
         CREATE TABLE IF NOT EXISTS time_entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
+            location_id INTEGER,
             clock_in TIMESTAMP NOT NULL,
             clock_out TIMESTAMP,
             total_hours REAL,
             approved BOOLEAN DEFAULT 0,
             notes TEXT,
-            FOREIGN KEY(user_id) REFERENCES users(id)
+            FOREIGN KEY(user_id) REFERENCES users(id),
+            FOREIGN KEY(location_id) REFERENCES locations(id)
         )
     ''')
 
@@ -337,6 +347,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS pickups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             company_id INTEGER,
+            location_id INTEGER,
             order_id INTEGER NOT NULL,
             customer_id INTEGER NOT NULL,
             scheduled_at TIMESTAMP,
@@ -347,6 +358,7 @@ def init_db():
             signed_at TIMESTAMP,
             signed_by TEXT,
             FOREIGN KEY(company_id) REFERENCES companies(id),
+            FOREIGN KEY(location_id) REFERENCES locations(id),
             FOREIGN KEY(order_id) REFERENCES orders(id),
             FOREIGN KEY(customer_id) REFERENCES customers(id)
         )
@@ -404,7 +416,6 @@ def init_db():
     ''')
 
     conn.commit()
-    conn.close()
 
 if __name__ == '__main__':
     print("Initializing Bridal and Beyond AI Database...")

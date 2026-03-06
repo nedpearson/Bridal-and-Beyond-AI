@@ -11,6 +11,7 @@ def order_list():
     conn = get_db()
     cursor = conn.cursor()
     company_id = session.get('company_id')
+    location_id = session.get('location_id', 0)
     
     # Get all active orders and their balances
     cursor.execute('''
@@ -19,9 +20,9 @@ def order_list():
             (SELECT COALESCE(SUM(amount), 0) FROM payment_ledger WHERE order_id = o.id AND type = 'Refund') as total_refunded
         FROM orders o
         JOIN customers c ON o.customer_id = c.id
-        WHERE o.company_id = ?
+        WHERE o.company_id = ? AND (o.location_id = ? OR ? = 0)
         ORDER BY o.created_at DESC
-    ''', (company_id,))
+    ''', (company_id, location_id, location_id))
     orders = cursor.fetchall()
     
     # Process calculated balances before rendering

@@ -35,7 +35,64 @@ def vendor_list():
     ''', (company_id,))
     pos = cursor.fetchall()
     
-    return render_template('purchasing.html', vendors=vendors, pos=pos)
+    # KPIs for Drilldowns
+    cursor.execute('''
+        SELECT COUNT(po.id) as count, SUM(po.total_cost) as expected_cost
+        FROM purchase_orders po
+        JOIN vendors v ON po.vendor_id = v.id
+        WHERE v.company_id = ? AND po.status != 'Received'
+    ''', (company_id,))
+    po_stats = cursor.fetchone()
+    total_open_pos = po_stats['count'] if po_stats and po_stats['count'] else 0
+    total_expected_cost = po_stats['expected_cost'] if po_stats and po_stats['expected_cost'] else 0
+    total_active_vendors = len(vendors)
+    
+    return render_template('purchasing.html', 
+                           vendors=vendors, 
+                           pos=pos,
+                           total_active_vendors=total_active_vendors,
+                           total_open_pos=total_open_pos,
+                           total_expected_cost=total_expected_cost)
+
+@bp.route('/api/drilldown/<metric>')
+def drilldown_api(metric):
+    if 'user_id' not in session: return {"error": "Unauthorized"}, 401
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    company_id = session.get('company_id')
+    
+    if metric == 'active_vendors':
+        cursor.execute('''
+            SELECT name as "Vendor Name", contact_name as "Contact", email as "Email", phone as "Phone"
+            FROM vendors WHERE company_id = ? ORDER BY name ASC
+        ''', (company_id,))
+        rows = [dict(row) for row in cursor.fetchall()]
+        return {"total_records": len(rows), "data": rows, "columns": ["Vendor Name", "Contact", "Email", "Phone"]}
+        
+    elif metric == 'open_orders':
+        cursor.execute('''
+            SELECT '#' || po.id as "PO #", v.name as "Vendor", po.order_date as "Order Date", po.expected_delivery as "Expected", po.status as "Status"
+            FROM purchase_orders po
+            JOIN vendors v ON po.vendor_id = v.id
+            WHERE v.company_id = ? AND po.status != 'Received'
+            ORDER BY po.order_date DESC
+        ''', (company_id,))
+        rows = [dict(row) for row in cursor.fetchall()]
+        return {"total_records": len(rows), "data": rows, "columns": ["PO #", "Vendor", "Order Date", "Expected", "Status"]}
+        
+    elif metric == 'expected_cost':
+        cursor.execute('''
+            SELECT '#' || po.id as "PO #", v.name as "Vendor", po.status as "Status", "$" || printf("%.2f", po.total_cost) as "Amount"
+            FROM purchase_orders po
+            JOIN vendors v ON po.vendor_id = v.id
+            WHERE v.company_id = ? AND po.status != 'Received'
+            ORDER BY po.total_cost DESC
+        ''', (company_id,))
+        rows = [dict(row) for row in cursor.fetchall()]
+        return {"total_records": len(rows), "data": rows, "columns": ["PO #", "Vendor", "Status", "Amount"]}
+        
+    return {"error": "Invalid metric"}, 400
 
 @bp.route('/vendor/<int:id>')
 def vendor_detail(id):
